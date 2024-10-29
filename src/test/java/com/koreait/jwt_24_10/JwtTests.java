@@ -10,6 +10,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.crypto.SecretKey;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -55,6 +57,48 @@ class JwtTests {
         SecretKey secretKey2 = jwtProvider.getSecretKey();
 
         assertThat(secretKey1 == secretKey2).isTrue();
+    }
+
+    @Test
+    @DisplayName("accessToken 얻기")
+    void t5() {
+        Map<String,Object> claims = new HashMap<>();
+        claims.put("id",1L);
+        claims.put("username","admin");
+
+        // 현재 시각을 기준으로 5시간의 유효시간을 가지는 토큰 생성
+        String accessToken = jwtProvider.getToken(claims, 60*60*5);
+        System.out.println("accessToken : " + accessToken);
+        assertThat(accessToken).isNotNull();
+    }
+
+    @Test
+    @DisplayName("accessToken 인증(만료 여부 체크)")
+    void t6() {
+        Map<String,Object> claims = new HashMap<>();
+        claims.put("id",1L);
+        claims.put("username","admin");
+
+        // 현재 시각을 기준으로 5시간의 유효시간을 가지는 토큰 생성
+        String accessToken = jwtProvider.getToken(claims, -1);
+        System.out.println("accessToken : " + accessToken);
+        assertThat(jwtProvider.verify(accessToken)).isFalse();
+    }
+
+    @Test
+    @DisplayName("accessToken을 통해서 claims를 얻을 수 있다.")
+    void t7() {
+        Map<String,Object> claims = new HashMap<>();
+        claims.put("id",1L);
+        claims.put("username","admin");
+
+        // 현재 시각을 기준으로 5시간의 유효시간을 가지는 토큰 생성
+        String accessToken = jwtProvider.getToken(claims, 60*60*5);
+        System.out.println("accessToken : " + accessToken);
+        assertThat(jwtProvider.verify(accessToken)).isTrue();
+
+        Map<String,Object> claimsFromToken = jwtProvider.getClaims(accessToken);
+        System.out.println("claimsFromToken : " + claimsFromToken);
     }
 
 }
